@@ -6,3 +6,5 @@ main/ftp.json
 .idea/workspace.xml
 pokemon2/__pycache__/settings.cpython-310.pyc
 pokemon2/settings.py
+*.pyc
+*.xml
