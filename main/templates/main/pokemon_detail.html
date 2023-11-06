@@ -1,4 +1,5 @@
 {% extends 'main/base.html' %}
+{% load static %}
 
 {% block title %}
     {{ pokemon.name }}
@@ -8,7 +9,12 @@
     <div class="container">
         <div class="row">
             <div class="col-md-6">
-                <img src="{{ pokemon.png }}" class="img-fluid" alt="{{ pokemon.name }}">
+                {% if pokemon.png %}
+                                <img src="{{ pokemon.png }}" class="card-img-top" alt="{{ pokemon.name }}">
+                            {% else %}
+                                <img src="{% static 'pokemon.svg' %}" class="card-img-top" alt="{{ pokemon.name }}">
+
+                            {% endif %}
             </div>
             <div class="col-md-6">
                 <h2>{{ pokemon.name }}</h2>
@@ -29,6 +35,12 @@
                     {{ abilities_string }}
                 </p>
                 <a href="{% url 'fight' pokemon.name %}" class="btn btn-primary">В бой</a>
+                <form method="post">
+                    {% csrf_token %}
+                    {{ SavePokemonInfo.as_p }}
+                    <button type="submit" class="btn btn-primary" name="save_info">Сохранить информацию о покемоне
+                    </button>
+                </form>
             </div>
         </div>
     </div>
