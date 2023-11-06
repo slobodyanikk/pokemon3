@@ -2,3 +2,4 @@ pokemon2/settings.py
 venv/
 __pycache__/
 .idea/
+main/ftp.json

@@ -83,6 +83,13 @@ DATABASES = {
     }
 }
 
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+        'LOCATION': 'redis://127.0.0.1:6379/1',
+    }
+}
+
 MY_EMAIL = os.environ.get('MY_EMAIL')
 MY_EMAIL_PASSWORD = os.environ.get('MY_EMAIL_PASSWORD')
 

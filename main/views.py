@@ -1,13 +1,22 @@
+import ftplib
+import io
+
 import requests, random
 import smtplib
 from email.mime.text import MIMEText
 from django.conf import settings
-
+import json
+from datetime import date
 from django.utils import timezone
 from django.core.paginator import Paginator
 from django.shortcuts import render, redirect
-from .models import Fight, FightForm, FastFightForm, EmailForm
+from .models import Fight, FightForm, FastFightForm, EmailForm, SavePokemonInfo
 from django.http import JsonResponse
+from django.core.cache import cache
+
+with open('main/ftp.json', 'r') as file:
+    data = file.read()
+ftp_params = json.loads(data)
 
 
 def get_random_pokemon(pokemon_name):
@@ -198,9 +207,20 @@ def fight(request, pokemon_name):
 
 
 def pokemon_detail(request, pokemon_name):
-    pokemon = get_pokemon_data(pokemon_name)
+    # Сначала пробуем получить данные из кэша
+    pokemon_detail_cached = cache.get('pokemon_detail' + str(pokemon_name))
+    if not pokemon_detail_cached:
+        # Если данных в кэше нет, получить их и сохранить в кэш
+        pokemon_detail_cached = get_pokemon_data(pokemon_name)
+        cache.set(('pokemon_detail' + str(pokemon_name)), pokemon_detail_cached,
+                  3600)  # Кэшировать на 1 час (время в секундах)
 
-    return render(request, 'main/pokemon_detail.html', {'pokemon': pokemon})
+    if request.method == 'POST':
+        if 'save_info' in request.POST:
+            return get_pokemon_save(request, pokemon_name)
+    else:
+
+        return render(request, 'main/pokemon_detail.html', {'pokemon': pokemon_detail_cached})
 
 
 def index(request):
@@ -213,13 +233,31 @@ def index(request):
     limit = 6  # Количество покемонов на каждой странице
     offset = (page_number - 1) * limit
 
-    paginator = Paginator(get_all_pokemons(), 6)
+    # Сначала пробуем получить данные из кэша
+    all_pokemons_name_cached = cache.get('all_pokemons')
+    if not all_pokemons_name_cached:
+        # Если данных в кэше нет, получить их и сохранить в кэш
+        all_pokemons_name_cached = get_all_pokemons()
+        cache.set('all_pokemons', all_pokemons_name_cached, 3600)  # Кэшировать на 1 час (время в секундах)
 
-    pokemon_info = get_pokemon_names(limit, offset)
+    paginator = Paginator(all_pokemons_name_cached, 6)
+
+    # Сначала пробуем получить данные из кэша
+    pokemon_info_cached = cache.get('pokemon_list' + str(page_number))
+
+    if not pokemon_info_cached:
+        # Если данных в кэше нет, получить их и сохранить в кэш
+        pokemon_info_cached = get_pokemon_names(limit, offset)
+        cache.set(('pokemon_list' + str(page_number)), pokemon_info_cached,
+                  3600)
 
     page = paginator.get_page(page_number)
-    return render(request, 'main/index.html',
-                  {'title': 'Main page of site', 'pokemon_info': pokemon_info, 'page_number': page})
+    # Используйте данные из кэша для отображения
+    return render(request, 'main/index.html', {
+        'title': 'Main page of site',
+        'pokemon_info': pokemon_info_cached,
+        'page_number': page
+    })
 
 
 def get_all_pokemons():
@@ -503,3 +541,26 @@ def get_fast_fight_result(request):
         "game_winner": winner,
     }
     return JsonResponse(res)
+
+
+def get_pokemon_save(request, user_pokemon):
+    pokemon = get_pokemon_data(user_pokemon)
+
+    # pokemon = JsonResponse(response)
+
+    folder_name = str(date.today()).replace('-', '').strip()
+    text_markdown = f"# Name: {pokemon['name']}\n\n### Info:\n* hp: {pokemon['hp']}\n* attack: {pokemon['attack']}\n* " \
+                    f"abilities: {pokemon['abilities']}\n* png: {pokemon['png']} "
+    byte_text_markdown = text_markdown.encode('utf-8')
+
+    ftp = ftplib.FTP(host=ftp_params['hostname'])
+    ftp.login(user=ftp_params['username'], passwd=ftp_params['password'])
+
+    files = ftp.nlst()
+    if folder_name not in files:
+        ftp.mkd(folder_name)
+    ftp.cwd(folder_name)
+    ftp.storbinary(f"STOR {pokemon['name']}.md", io.BytesIO(byte_text_markdown))
+    ftp.quit()
+
+    return render(request, 'main/save_result.html', {'result': 'Success'})
