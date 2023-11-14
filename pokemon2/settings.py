@@ -12,6 +12,11 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 import os
 from pathlib import Path
 
+from os import environ
+from dotenv import load_dotenv
+
+load_dotenv(dotenv_path="../.env.local")
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -19,12 +24,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-)d4l75$afy&4k4l2zw)3nc*r2(nl)c31c!$g+n4@$vvyim4gfq'
+SECRET_KEY = environ.get('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = environ.get('DEBUG') == "True"
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = environ.get("ALLOWED_HOSTS", "").split(",")
 
 # Application definition
 
@@ -75,11 +80,11 @@ WSGI_APPLICATION = 'pokemon2.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'pokemon_db2',
-        'USER': 'postgres',
-        'PASSWORD': '1',
-        'HOST': '127.0.0.1',
-        'PORT': '5432',
+        "NAME": environ.get('DB_NAME'),
+        "USER": environ.get('DB_USERNAME'),
+        "PASSWORD": environ.get('DB_PASSWORD'),
+        "HOST": '127.0.0.1',
+        "PORT": environ.get('DB_PORT'),
     }
 }
 
