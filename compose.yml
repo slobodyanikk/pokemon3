@@ -2,12 +2,12 @@ version: '3.8'
 services:
   app:
     container_name: poke_app
-    build: ./pokemon2
+    build: .
     image: slobodyanikk/pokemons:latest
-    command: gunicorn otrpo.wsgi:application --bind 0.0.0.0:8000
+    command: python manage.py runserver 0.0.0.0:8000
     restart: always
     ports:
-      - "8000:8000"
+      - 8000:8000
     env_file:
       - .env.docker
     depends_on:
@@ -19,7 +19,7 @@ services:
     image: postgres:latest
     restart: always
     ports:
-      - "5435:5432"
+      - 5435:5432
     environment:
       - POSTGRES_DB=${DB_NAME}
       - POSTGRES_USER=${DB_USERNAME}
