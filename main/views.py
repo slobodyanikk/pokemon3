@@ -324,11 +324,11 @@ def send_email(subject, message, to_email):
     # Создание объекта MIMEText для сообщения
     msg = MIMEText(message)
     msg['Subject'] = subject
-    msg['From'] = sender  # Замените на ваш email
+    msg['From'] = sender
     msg['To'] = to_email
 
     # SMTP-сервер и порт (для Gmail)
-    server = smtplib.SMTP(str(settings.MAIL_SERVER), settings.MAIL_PORT)
+    server = smtplib.SMTP(str(settings.EMAIL_SERVER), settings.EMAIL_PORT)
 
     # защищенное соединение
     server.starttls()
@@ -543,8 +543,8 @@ def get_fast_fight_result(request):
     return JsonResponse(res)
 
 
-def get_pokemon_save(request, user_pokemon):
-    pokemon = get_pokemon_data(user_pokemon)
+def get_pokemon_save(request, pokemon_name):
+    pokemon = get_pokemon_data(pokemon_name)
 
     # pokemon = JsonResponse(response)
 
