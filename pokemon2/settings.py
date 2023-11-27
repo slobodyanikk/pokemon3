@@ -81,11 +81,11 @@ WSGI_APPLICATION = 'pokemon2.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        "NAME": environ.get('DB_NAME'),
-        "USER": environ.get('DB_USERNAME'),
-        "PASSWORD": environ.get('DB_PASSWORD'),
-        "HOST": environ.get('DB_HOST'),
-        "PORT": environ.get('DB_PORT'),
+        "NAME": os.environ.get('DB_NAME'),
+        "USER": os.environ.get('DB_USERNAME'),
+        "PASSWORD": os.environ.get('DB_PASSWORD'),
+        "HOST": os.environ.get('DB_HOST'),
+        "PORT": os.environ.get('DB_PORT'),
     }
 }
 
