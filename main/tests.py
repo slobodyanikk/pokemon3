@@ -158,3 +158,7 @@ class SeleniumTests(LiveServerTestCase):
         user_mail = self.selenium.find_element(By.XPATH, '//*[@id="id_email"]')
         user_mail.send_keys("k.slobodyanik55@gmail.com")
         self.selenium.find_element(By.XPATH, "/html/body/div/div/div/div[2]/div[2]/form/button").click()
+
+# python manage.py test main.tests
+# python manage.py test main.tests.PokemonsViewTest
+# python manage.py test main.tests.SeleniumTests
