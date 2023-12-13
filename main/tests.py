@@ -8,13 +8,13 @@ from selenium.webdriver.support.wait import WebDriverWait
 class PokemonsViewTest(TestCase):
 
     def test_index(self):
-        response = self.client.get(reverse('home'))
+        response = self.client.get(reverse('main:home'))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.context["pokemon_info"]), 6)
         self.assertEqual(response.context["pokemon_info"][0]["name"], "bulbasaur")
 
     def test_pokemon_detail(self):
-        url = reverse('pokemon_detail', args=["bulbasaur"])
+        url = reverse('main:pokemon_detail', args=["bulbasaur"])
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context["pokemon"]["name"], "bulbasaur")
@@ -25,7 +25,7 @@ class PokemonsViewTest(TestCase):
         self.assertEqual(total_abilities, 2)
 
     def test_fight(self):
-        url = reverse('fight', args=["bulbasaur"])
+        url = reverse('main:fight', args=["bulbasaur"])
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context["user_pokemon"]["name"], "bulbasaur")
@@ -34,7 +34,7 @@ class PokemonsViewTest(TestCase):
         self.assertTrue(response.context["round"] == 1)
 
     def test_api_pokemon_random(self):
-        url = reverse('pokemon_random')
+        url = reverse('main:pokemon_random')
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response['content-type'], 'application/json')
@@ -42,7 +42,7 @@ class PokemonsViewTest(TestCase):
         self.assertIn('random pokemon id', data)
 
     def test_api_pokemon_list(self):
-        url = reverse('pokemon_list')
+        url = reverse('main:pokemon_list')
         response = self.client.get(url, {'page': 1, 'limit': 5, 'filters': 'name,id'})
         self.assertEqual(response.status_code, 200)
         data = response.json()
@@ -52,7 +52,7 @@ class PokemonsViewTest(TestCase):
         self.assertEqual(data["filtered_pokemon_list"][4]["name"], "charmeleon")
 
     def test_api_pokemon_id(self):
-        url = reverse('pokemon_id', args=["bulbasaur"])
+        url = reverse('main:pokemon_id', args=["bulbasaur"])
         response = self.client.get(url, {'filters': 'name,id,height,weight'})
         self.assertEqual(response.status_code, 200)
         data = response.json()
@@ -61,7 +61,7 @@ class PokemonsViewTest(TestCase):
         self.assertEqual(data["pokemon_id_info"]["height"], 7)
 
     def test_api_fight_info(self):
-        url = reverse('fight_info')
+        url = reverse('main:fight_info')
         response = self.client.get(url, {'pokemon_id': 4, 'opponent_id': 1})
         self.assertEqual(response.status_code, 200)
         data = response.json()
@@ -70,7 +70,7 @@ class PokemonsViewTest(TestCase):
         self.assertEqual(data["your pokemon"]["name"], "charmander")
 
     def test_api_update_pokemon_data(self):
-        url = reverse('update_pokemon_data', args=[5])
+        url = reverse('main:update_pokemon_data', args=[5])
         response = self.client.get(url, {'pokemon_id': 4, 'opponent_id': 1})
         self.assertEqual(response.status_code, 200)
         data = response.json()
@@ -80,7 +80,7 @@ class PokemonsViewTest(TestCase):
         self.assertEqual(data["round_results"][0]["number"], 5)
 
     def test_api_fast_fight_result(self):
-        url = reverse('fast_fight_result')
+        url = reverse('main:fast_fight_result')
         response = self.client.get(url, {'pokemon_id': 4, 'opponent_id': 1})
         self.assertEqual(response.status_code, 200)
         data = response.json()
@@ -90,7 +90,7 @@ class PokemonsViewTest(TestCase):
         self.assertTrue(data["rounds"][len(data["rounds"]) - 1][-1] == data['game_winner'])
 
     def test_api_save_pokemon(self):
-        url = reverse('save_pokemon', args=["bulbasaur"])
+        url = reverse('main:save_pokemon', args=["bulbasaur"])
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
         data = response.context
@@ -158,3 +158,7 @@ class SeleniumTests(LiveServerTestCase):
         user_mail = self.selenium.find_element(By.XPATH, '//*[@id="id_email"]')
         user_mail.send_keys("k.slobodyanik55@gmail.com")
         self.selenium.find_element(By.XPATH, "/html/body/div/div/div/div[2]/div[2]/form/button").click()
+
+# python manage.py test main.tests
+# python manage.py test main.tests.PokemonsViewTest
+# python manage.py test main.tests.SeleniumTests

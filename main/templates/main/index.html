@@ -37,7 +37,7 @@
             {% for pokemon in pokemon_info %}
                 <div class="col-md-4 mb-4">
                     <div class="card">
-                        <a href="{% url 'pokemon_detail' pokemon.name %}">
+                        <a href="{% url 'main:pokemon_detail' pokemon.name %}">
                             {% if pokemon.png %}
                                 <img src="{{ pokemon.png }}" class="card-img-top" alt="{{ pokemon.name }}">
                             {% else %}
@@ -56,7 +56,7 @@
                                 </div>
                             </div>
 
-                            <a href="{% url 'fight' pokemon.name %}" class="btn btn-primary w-100">В бой</a>
+                            <a href="{% url 'main:fight' pokemon.name %}" class="btn btn-primary w-100">В бой</a>
 
                         </div>
                     </div>

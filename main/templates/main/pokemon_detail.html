@@ -34,7 +34,7 @@
                     {% endwith %}
                     {{ abilities_string }}
                 </p>
-                <a href="{% url 'fight' pokemon.name %}" class="btn btn-primary">В бой</a>
+                <a href="{% url 'main:fight' pokemon.name %}" class="btn btn-primary">В бой</a>
                 <form method="post">
                     {% csrf_token %}
                     {{ SavePokemonInfo.as_p }}

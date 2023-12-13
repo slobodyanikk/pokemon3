@@ -1,0 +1,42 @@
+{% extends 'main/base.html' %}
+{% load static %}
+
+{% block title %}
+    Login
+{% endblock %}
+{% block content %}
+
+    <div class="container d-flex justify-content-center align-items-center flex-column text-center" style="width: 50%;">
+
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-md-12">
+                    <form method="post" action="{% url 'login' %}?next={% url 'code_confirmation' %}">
+                        {% csrf_token %}
+                        {{ form.as_p }}
+                        <button type="submit" class="btn btn-primary btn-block" style="width: 40%;">Get Code</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="row">
+            <div class="col-md-12 text-center mb-3">
+                <a href="{% url "password_reset" %}">Forgot password?</a>
+            </div>
+
+            <!-- Register buttons -->
+            <div class="col-md-12 text-center">
+                <p>Not a member? <a href="{% url "register" %}">Register</a></p>
+            </div>
+
+            <div class="col-md-12 text-center">
+                <div class="d-flex justify-content-center align-items-center">
+                    <p class="mb-0 mx-2">or sign up with:</p>
+                    <a href="{% url "social:begin" "github" %}">GitHub</a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

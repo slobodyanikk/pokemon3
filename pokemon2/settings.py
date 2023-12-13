@@ -10,8 +10,8 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 import os
+from django.urls import reverse_lazy
 from pathlib import Path
-
 from os import environ
 from dotenv import load_dotenv
 
@@ -41,7 +41,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'main'
+    'main',
+    'social_django',
 ]
 
 MIDDLEWARE = [
@@ -96,6 +97,7 @@ CACHES = {
     }
 }
 
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 MY_EMAIL = os.environ.get('MAIL_EMAIL')
 MY_EMAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
 EMAIL_SERVER = os.environ.get('MAIL_SERVER')
@@ -103,6 +105,11 @@ EMAIL_PORT = os.environ.get('MAIL_PORT')
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
+
+AUTHENTICATION_BACKENDS = (
+    'social_core.backends.github.GithubOAuth2',
+    'django.contrib.auth.backends.ModelBackend',
+)
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -142,3 +149,13 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'  # или другой способ хранения сессий, какой вам нужен
 SESSION_COOKIE_NAME = 'my_session'  # Название куки для сессии
+
+LOGIN_REDIRECT_URL = reverse_lazy("main:profile")
+
+SOCIAL_AUTH_POSTGRES_JSONFIELD = True
+# SOCIAL_AUTH_POSTGRES_JSONFIELD_ENABLED = True
+
+SOCIAL_AUTH_GITHUB_KEY = '79d64f3defb25607e66f'
+SOCIAL_AUTH_GITHUB_SECRET = '090e7660699384360b1ce85f242d7c2a8c809475'
+
+SOCIAL_AUTH_URL_NAMESPACE = 'social'

@@ -1,5 +1,6 @@
 import ftplib
 import io
+import string
 
 import requests, random
 import smtplib
@@ -7,12 +8,20 @@ from email.mime.text import MIMEText
 from django.conf import settings
 import json
 from datetime import date
+
+from django.contrib import messages
+from django.contrib.auth import logout, login, authenticate
+from django.contrib.auth.forms import AuthenticationForm
 from django.utils import timezone
 from django.core.paginator import Paginator
 from django.shortcuts import render, redirect
-from .models import Fight, FightForm, FastFightForm, EmailForm, SavePokemonInfo
+from social_core.pipeline import user
+
+from .models import Fight, FightForm, FastFightForm, EmailForm, SavePokemonInfo, CustomUserCreationForm, LoginForm, \
+    CodeConfirmationForm, CustomUser
 from django.http import JsonResponse
 from django.core.cache import cache
+from django.contrib.auth.decorators import login_required
 
 with open('main/ftp.json', 'r') as file:
     data = file.read()
@@ -78,7 +87,11 @@ def fight(request, pokemon_name):
                     print(user_hp, opponent_hp)
 
                     if user_hp <= 0 or opponent_hp <= 0:
+                        current_user = request.user
+                        current_user_id = current_user.id
+
                         fight_result = Fight(
+                            account_id=current_user_id,
                             pokemon_name=user_pokemon['name'],
                             enemy_name=request.session.get('opponent_pokemon')['name'],
                             result=user_hp > opponent_hp,
@@ -136,7 +149,11 @@ def fight(request, pokemon_name):
                     user_hp -= opponent_attack
 
                 if user_hp <= 0 or opponent_hp <= 0:
+                    current_user = request.user
+                    current_user_id = current_user.id
+
                     fight_result = Fight(
+                        account_id=current_user_id,
                         pokemon_name=user_pokemon['name'],
                         enemy_name=request.session.get('opponent_pokemon')['name'],
                         result=user_hp > opponent_hp,
@@ -564,3 +581,92 @@ def get_pokemon_save(request, pokemon_name):
     ftp.quit()
 
     return render(request, 'main/save_result.html', {'result': 'Success'})
+
+
+@login_required(login_url='/login/')
+def profile(request):
+    return render(request, 'main/profile.html')
+
+
+def custom_logout(request):
+    logout(request)
+    return redirect('main:home')
+
+
+def register(request):
+    if request.method == 'POST':
+        form = CustomUserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            # Аутентифицируем пользователя после успешной регистрации
+            user.backend = 'django.contrib.auth.backends.ModelBackend'
+            login(request, user)
+            return redirect('main:profile')  # Перенаправление на страницу входа
+    else:
+        form = AuthenticationForm()
+
+    return render(request, '../templates/registration/register.html', {'form': form})
+
+
+def login_view(request):
+    form = None
+    second_code = None
+    if request.method == 'POST':
+        # Обработка входа пользователя
+        form = LoginForm(data=request.POST)
+        if form.is_valid():
+            username = form.cleaned_data['username']
+            email = form.cleaned_data['email']
+            password = form.cleaned_data['password']
+            print(username)
+            print(email)
+            print(password)
+            user = authenticate(request, username=username, password=password)
+            print(user)
+            if user:
+                email_subject = "Pokemons. Вход в свой профиль"
+                second_code = ''.join(random.choices(string.ascii_letters + string.digits, k=8))
+                print('code_second:', second_code)
+                email_message = "Ваш код для подтверждения: {}.".format(second_code)
+                send_email(email_subject, email_message, email)
+                request.session['user_email'] = email
+                request.session['username'] = username
+                request.session['password'] = password
+                request.session['second_code'] = second_code
+                # Перенаправление на страницу подтверждения
+                next_url = request.GET.get('next', '')
+                print(next_url)
+                if next_url:
+                    return redirect(next_url)
+                else:
+                    return redirect('main:profile')
+    else:
+        form = LoginForm()
+    return render(request, '../templates/registration/login.html', {'form': form})
+
+
+def code_confirmation_view(request):
+    if request.method == 'POST':
+        form = CodeConfirmationForm(request.POST)
+        if form.is_valid():
+            second_code = request.session.get('second_code', None)
+            email = request.session.get('user_email')
+            username = request.session.get('username')
+            password = request.session.get('password')
+            user_entered_code = form.cleaned_data['code']
+            print(email)
+            print(username)
+            print(password)
+            user = authenticate(request, username=username, password=password)
+            print(user)
+            if user is not None:
+                if user_entered_code == second_code:
+                    login(request, user)
+                    messages.success(request, 'Successfully logged in')
+                    del request.session['second_code']
+                    return redirect('main:profile')  # Замените 'home' на вашу домашнюю страницу
+                else:
+                    messages.error(request, 'Invalid code')
+    else:
+        form = CodeConfirmationForm()
+    return render(request, 'main/code_confirmation.html', {'form': form})
